@@ -21,6 +21,7 @@ def pcd_ground_seg_open3d(scan):
 
 
 if __name__ == "__main__":
+    print("hello")
     point = o3d.io.read_point_cloud("../data/laserscanner2/04082.pcd")
     # o3d.visualization.draw_geometries([point])
     ground, rest = pcd_ground_seg_open3d(point)
