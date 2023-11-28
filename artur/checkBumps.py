@@ -1,4 +1,3 @@
-# coding:utf-8
 import math
 
 import open3d as o3d
@@ -10,9 +9,9 @@ def pcd_ground_seg_open3d(scan):
     """ Open3D also supports segmentation of geometric primitives from point clouds using RANSAC.
     """
     pcd = copy.deepcopy(scan)
-    ground_model, ground_indexes = scan.segment_plane(distance_threshold=0.03,
+    ground_model, ground_indexes = scan.segment_plane(distance_threshold=0.3,
                                                       ransac_n=3,
-                                                      num_iterations=100)
+                                                      num_iterations=10000)
     ground_indexes = np.array(ground_indexes)
     ground = pcd.select_by_index(ground_indexes)
     rest = pcd.select_by_index(ground_indexes, invert=True)
@@ -22,32 +21,12 @@ def pcd_ground_seg_open3d(scan):
 
 
 def distance_plane_to_point(x1, y1, z1, a, b, c, d) -> float:
-
     d = abs((a * x1 + b * y1 + c * z1 + d))
     e = (math.sqrt(a * a + b * b + c * c))
     try:
         return d / e
     except FloatingPointError:
         return 0
-
-
-def create_plane(point1, point2, point3) -> tuple:
-    p1 = np.array(point1)
-    p2 = np.array(point2)
-    p3 = np.array(point3)
-
-    # These two vectors are in the plane
-    v1 = p3 - p1
-    v2 = p2 - p1
-
-    # the cross product is a vector normal to the plane
-    cp = np.cross(v1, v2)
-    a, b, c = cp
-
-    # This evaluates a * x3 + b * y3 + c * z3 which equals d
-    d = np.dot(cp, p3)
-
-    return a, b, c, d
 
 
 def equation_plane(point1, point2, point3):
@@ -83,27 +62,60 @@ def get_three_points(arr) -> tuple:
     return arr[highest_x], arr[lowest_x], arr[highest_y]
 
 
+def rotate(model, degrees):
+    angle = degrees * np.pi / 180
+
+    # Rotation matrix
+    rotation_matrix = np.array([[np.cos(angle), -np.sin(angle), 0],
+                                [np.sin(angle), np.cos(angle), 0],
+                                [0, 0, 1]])
+
+    # Apply the rotation
+    rotated_points = np.dot(model.points, rotation_matrix.T)
+
+    # Update the point cloud with the rotated points
+    model.points = o3d.utility.Vector3dVector(rotated_points)
+
+
 if __name__ == "__main__":
     np.seterr('raise')
 
+    pcd = o3d.io.read_point_cloud("../data/car/test.pcd")
+    rotate(pcd, 55)
 
-    point = o3d.io.read_point_cloud("../data/laserscanner2/04083.pcd")
-    o3d.visualization.draw_geometries([point])
-    ground, rest = pcd_ground_seg_open3d(point)
-    # o3d.visualization.draw_geometries([ground])
+    all_points = np.asarray(pcd.points)
+    all_colors = np.asarray(pcd.colors)
 
+    # Filter the points according to the size
+    filtered_points = []
+    width = 20
+    length = 50
+
+    for i in range(0, len(all_points)):
+        point = all_points[i]
+        if -(width / 2) <= point[0] <= width / 2 and -length <= point[1] <= 0 and point[2] <= 0:
+            filtered_points.append(point)
+
+    filtered_model = o3d.geometry.PointCloud()
+    filtered_model.points = o3d.utility.Vector3dVector(np.array(filtered_points))
+
+    # retrieving ground
+    ground, rest = pcd_ground_seg_open3d(filtered_model)
+    ground.paint_uniform_color((0.7, 0.7, 0.7))
     ground_points = np.asarray(ground.points)
 
+    o3d.visualization.draw_geometries([ground])
+
+    # create mathematical plain
     plane_points = get_three_points(arr=ground_points)
 
-    a, b, c, d = create_plane(plane_points[0], plane_points[1], plane_points[2])
-    a1, b1, c1, d1 = equation_plane(plane_points[0], plane_points[1], plane_points[2])
+    a, b, c, d = equation_plane(plane_points[0], plane_points[1], plane_points[2])
 
-    all_points = np.asarray(point.points)
+    all_points = np.asarray(pcd.points)
     for point in all_points:
-        distance = distance_plane_to_point(point[0], point[1], point[2], a1, b1, c1, d1)
+        distance = distance_plane_to_point(point[0], point[1], point[2], a, b, c, d)
 
-        if distance > 3 and ground_points[0][2] < point[2]:
+        if distance > 3 and ground_points[0][2] > point[2]:
             print(distance)
 
     # print(ground_points)
