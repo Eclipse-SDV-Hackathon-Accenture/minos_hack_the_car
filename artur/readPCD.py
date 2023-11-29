@@ -81,6 +81,14 @@ def pcd_ground_seg_open3d(scan):
     # rest.paint_uniform_color(config['rest_color'])
     return ground, rest
 
+def distance_plane_to_point(x1, y1, z1, a: float, b: float, c: float, d: float) -> float:
+    d = abs((a * x1 + b * y1 + c * z1 + d))
+    e = (math.sqrt(a * a + b * b + c * c))
+    try:
+        return d / e
+    except FloatingPointError:
+        return 0
+
 
 if __name__ == "__main__":
     print("hello")
@@ -88,7 +96,7 @@ if __name__ == "__main__":
     #     point = o3d.io.read_point_cloud("test" + str(i*10) + ".pcd")
     #     o3d.visualization.draw_geometries([point])
 
-    pcd = o3d.io.read_point_cloud("./data/car/test.pcd")
+    pcd = o3d.io.read_point_cloud("../data/car/test.pcd")
     # set three axis for visualization
     mesh = o3d.geometry.TriangleMesh.create_coordinate_frame()
     mesh.scale(5, center=mesh.get_center())
@@ -141,7 +149,7 @@ if __name__ == "__main__":
     ground_ror, ind = ground.remove_radius_outlier(num_points, radius)
     # obb = ground_ror.get_oriented_bounding_box()
     # obb.color = (0, 1, 0)  # 绿色
-    o3d.visualization.draw_geometries([mesh, ground_ror], width=800, height=600)
+    # o3d.visualization.draw_geometries([mesh, ground_ror], width=800, height=600)
 
     # define the 2D shape of the ground point cloud
     ground_points = np.asarray(ground_ror.points)
@@ -170,7 +178,7 @@ if __name__ == "__main__":
     boundary_pc.points = o3d.utility.Vector3dVector(np.array(boundary_point))
     voxel_size = 2
     boundary_pc_dsp = boundary_pc.voxel_down_sample(voxel_size)
-    o3d.visualization.draw_geometries([mesh, boundary_pc_dsp], width=800, height=600)
+    # o3d.visualization.draw_geometries([mesh, boundary_pc_dsp], width=800, height=600)
 
     # mesh_tx = copy.deepcopy(mesh).translate((1.3, 0, 0))
     # mesh_ty = copy.deepcopy(mesh).translate((0, 1.3, 0))
@@ -216,6 +224,14 @@ if __name__ == "__main__":
             continue
         cluster_idx[c].append(i)
 
+    #TODO: detection of height, distance and smoothness of the object
+    #TODO: categorize how severe the situation is
+    #TODO: slow down, change, stop
+    #TODO: check the intensity of a measured cloud point
+
+    # mathematical plane
+    a, b, c, d = grd_model
+
     # detect if the cluster is a bump
     bump_bbox = []
     for idx in cluster_idx:
@@ -223,9 +239,15 @@ if __name__ == "__main__":
             continue
         cluster = roi_pc.select_by_index(idx)
         center = cluster.get_center()
+
+        # distance to boundary
         dis_to_bdy = min_dis_to_boundary(boundary_pc_dsp.points, center)
         print(dis_to_bdy)
-        if inside_boundary(boundary_pc_dsp.points, center) and center[2] > -1.3 and dis_to_bdy > 0.5:
+
+        # distance to plane
+        dis_to_plane = distance_plane_to_point(center[0], center[1], center[2], a, b, c, d)
+
+        if inside_boundary(boundary_pc_dsp.points, center) and 0.25 <= dis_to_plane <= 1.3 and dis_to_bdy > 0.7:
             obb = cluster.get_oriented_bounding_box()
             obb.color = (0, 1, 0)  # 绿色
             bump_bbox.append(obb)

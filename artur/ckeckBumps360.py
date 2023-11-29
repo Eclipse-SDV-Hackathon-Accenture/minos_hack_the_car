@@ -78,10 +78,11 @@ def rotate(model, degrees):
 
 
 def check_point_position(point, width, length):
-    if -(width / 2) <= point[0] <= width / 2 and -length <= point[1] <= -4 and point[2] <= 0:
-        return True
+    tolerance = 10
+    if (-tolerance <= point[0] <= tolerance) and (-tolerance <= point[1] <= tolerance):
+        return False
 
-    return False
+    return True
 
 
 def add_bump_points(model, bum_points, bump_colors):
@@ -117,13 +118,13 @@ def main():
     np.seterr('raise')
 
     pcd = o3d.io.read_point_cloud("../data/car/test.pcd")
-    rotate(pcd, 60)
+    # rotate(pcd, 60)
 
     all_points = np.asarray(pcd.points)
     all_colors = np.asarray(pcd.colors)
 
     # Filter the points according to the size
-    width = 20
+    width = 70
     length = 70
     filtered_model, filtered_points = create_obs_cube(all_points, width, length)
 
