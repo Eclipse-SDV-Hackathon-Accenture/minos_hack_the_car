@@ -20,7 +20,7 @@ def pcd_ground_seg_open3d(scan):
     return ground, rest
 
 
-def distance_plane_to_point(x1, y1, z1, a, b, c, d) -> float:
+def distance_plane_to_point(x1, y1, z1, a: float, b: float, c: float, d: float) -> float:
     d = abs((a * x1 + b * y1 + c * z1 + d))
     e = (math.sqrt(a * a + b * b + c * c))
     try:
@@ -146,7 +146,11 @@ def main():
 
     add_bump_points(ground_model, bump_p, red_color)
 
-    o3d.visualization.draw_geometries([ground_model])
+    # Add x, y, z symbol
+    mesh = o3d.geometry.TriangleMesh.create_coordinate_frame()
+    mesh.scale(5, center=mesh.get_center())
+
+    o3d.visualization.draw_geometries([ground_model, mesh])
 
 
 if __name__ == "__main__":
