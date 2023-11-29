@@ -1,3 +1,4 @@
+import io
 import sys
 import time
 import numpy as np
@@ -9,12 +10,20 @@ from ecal.core.subscriber import ProtoSubscriber
 # proto_messages directory
 import proto_messages.hello_world_pb2 as hello_world_pb2
 import datatypes.ros.sensor_msgs.PointCloud2_pb2 as point_cloud_pb
+import datatypes.ros.sensor_msgs.CompressedImage_pb2 as img_pb
 import open3d as o3d
+from PIL import Image
 from pointcloud2 import read_points
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 pc_total = []
+img_total = []
+
+
+def byte2image(byte_data):
+    image = Image.open(io.BytesIO(byte_data))
+    return image
 
 
 # Callback for receiving messages
@@ -22,9 +31,10 @@ def callback(topic_name, proto_msg, time):
     # print("Message {} from {}: {}".format(proto_msg.id
     #                                       , proto_msg.name
     #                                       , proto_msg.msg))
-    print("Width {}, Height {}".format(proto_msg.width, proto_msg.height))
+    # print("Width {}, Height {}".format(proto_msg.width, proto_msg.height))
     # pc = o3d.convertCloudFromRosToOpen3d(proto_msg)
-    pc_total.append(proto_msg)
+    # pc_total.append(proto_msg)
+    img_total.append(proto_msg)
     # print("data: {}".format(proto_msg.fields))
 
 
@@ -38,17 +48,24 @@ if __name__ == "__main__":
     # datatype we are expecting to receive on that topic.
     # sub = ProtoSubscriber("hello_world_python_protobuf_topic"
     #                       , hello_world_pb2.HelloWorld)
-    sub = ProtoSubscriber("ROSVLS128CenterCenterRoof"
-                          , point_cloud_pb.PointCloud2)    # Set the Callback
+
+    # point cloud data
+    # sub = ProtoSubscriber("ROSVLS128CenterCenterRoof"
+    #                       , point_cloud_pb.PointCloud2)    # Set the Callback
+
+    sub = ProtoSubscriber("ROSFrontCenterImage", img_pb.CompressedImage)
+
     sub.set_callback(callback)
 
     # Just don't exit
     while ecal_core.ok():
-        print(len(pc_total))
-        if len(pc_total) >= 200:
+        if len(img_total) >= 3:
             break
         time.sleep(0.5)
 
+    img = img_total[0]
+    img_conv = byte2image(img.data)
+    img_conv.show()
     for j in range(len(pc_total)):
         if not j % 10 == 0:
             continue
