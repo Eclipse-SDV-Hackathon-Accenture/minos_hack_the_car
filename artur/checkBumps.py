@@ -77,45 +77,77 @@ def rotate(model, degrees):
     model.points = o3d.utility.Vector3dVector(rotated_points)
 
 
-if __name__ == "__main__":
+def check_point_position(point, width, length):
+    if -(width / 2) <= point[0] <= width / 2 and -length <= point[1] <= -4 and point[2] <= 0:
+        return True
+
+    return False
+
+
+def add_bump_points(model, bum_points, bump_colors):
+    model.points = o3d.utility.Vector3dVector(np.vstack([np.asarray(model.points), bum_points]))
+    model.colors = o3d.utility.Vector3dVector(np.vstack([np.asarray(model.colors), bump_colors]))
+
+
+def create_obs_cube(all_points, width, length) -> tuple:
+    correct_points = []
+
+    for i in range(0, len(all_points)):
+        point = all_points[i]
+        if check_point_position(point, width, length):
+            correct_points.append(point)
+
+    filtered_points = np.array(correct_points)
+    filtered_model = o3d.geometry.PointCloud()
+    filtered_model.points = o3d.utility.Vector3dVector(filtered_points)
+
+    return filtered_model, filtered_points
+
+
+def main():
     np.seterr('raise')
 
     pcd = o3d.io.read_point_cloud("../data/car/test.pcd")
-    rotate(pcd, 55)
+    rotate(pcd, 60)
 
     all_points = np.asarray(pcd.points)
     all_colors = np.asarray(pcd.colors)
 
     # Filter the points according to the size
-    filtered_points = []
-    width = 20
-    length = 50
-
-    for i in range(0, len(all_points)):
-        point = all_points[i]
-        if -(width / 2) <= point[0] <= width / 2 and -length <= point[1] <= 0 and point[2] <= 0:
-            filtered_points.append(point)
-
-    filtered_model = o3d.geometry.PointCloud()
-    filtered_model.points = o3d.utility.Vector3dVector(np.array(filtered_points))
+    width = 15
+    length = 70
+    filtered_model, filtered_points = create_obs_cube(all_points, width, length)
 
     # retrieving ground
-    ground, rest = pcd_ground_seg_open3d(filtered_model)
-    ground.paint_uniform_color((0.7, 0.7, 0.7))
-    ground_points = np.asarray(ground.points)
+    ground_model, rest = pcd_ground_seg_open3d(filtered_model)
+    ground_model.paint_uniform_color((0.7, 0.7, 0.7))
+    ground_points = np.asarray(ground_model.points)
 
-    o3d.visualization.draw_geometries([ground])
+    # o3d.visualization.draw_geometries([ground])
 
     # create mathematical plain
     plane_points = get_three_points(arr=ground_points)
-
     a, b, c, d = equation_plane(plane_points[0], plane_points[1], plane_points[2])
 
-    all_points = np.asarray(pcd.points)
-    for point in all_points:
+    # retrieve possible bump_points
+    bump_points = []
+    tolerance = 2
+
+    for point in filtered_points:
         distance = distance_plane_to_point(point[0], point[1], point[2], a, b, c, d)
 
-        if distance > 3 and ground_points[0][2] > point[2]:
+        if distance > tolerance and ground_points[0][2] > point[2] and check_point_position(point, width, length):
+            bump_points.append(point)
             print(distance)
 
-    # print(ground_points)
+    # Color the points beneath the road
+    bump_p = np.array(bump_points)
+    red_color = np.array([[1.0, 0.0, 0.0] for _ in range(len(bump_points))])
+
+    add_bump_points(ground_model, bump_p, red_color)
+
+    o3d.visualization.draw_geometries([ground_model])
+
+
+if __name__ == "__main__":
+    main()
