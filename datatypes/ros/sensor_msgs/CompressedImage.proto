@@ -2,7 +2,7 @@
 
 syntax = "proto3";
 
-import "ros/std_msgs/Header.proto";
+import "datatypes/ros/std_msgs/Header.proto";
 
 package ros.sensor_msgs;
 
