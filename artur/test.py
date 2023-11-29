@@ -1,28 +1,25 @@
 import open3d as o3d
 import numpy as np
 
-# Load point cloud data
-pcd = o3d.io.read_point_cloud("../data/car/test.pcd")
+def bounding_box_to_point_cloud(bounding_box, num_points=1000):
+    # Extract the corners of the bounding box
+    corners = np.array(bounding_box.get_box_points())
 
-# Filter ground points using RANSAC
-plane_model, inliers = pcd.segment_plane(distance_threshold=0.1, ransac_n=3, num_iterations=1000)
-ground_points = pcd.select_by_index(inliers)
+    # Sample points uniformly within the bounding box
+    points = np.random.uniform(corners.min(axis=0), corners.max(axis=0), size=(num_points, 3))
 
-# Identify holes in the road
-clustering = np.asarray(ground_points.cluster_dbscan(eps=0.5, min_points=10, print_progress=False))
-labels = clustering  # No need to separate the labels and clusters
+    # Create a point cloud
+    point_cloud = o3d.geometry.PointCloud()
+    point_cloud.points = o3d.utility.Vector3dVector(points)
 
-ground = np.asarray(ground_points.points)
-holes = []
-for i in range(0, len(ground)):
-    if labels[i] == -1:
-        holes.append(ground[i])
+    return point_cloud
 
-hole_model = o3d.geometry.PointCloud()
-hole_model.points = o3d.utility.Vector3dVector(holes)
+# Example usage:
+# Create a bounding box
+bbox = o3d.geometry.AxisAlignedBoundingBox(min_bound=(-1, -1, -1), max_bound=(1, 1, 1))
 
-# Visualize the results
-o3d.visualization.draw_geometries([hole_model, ground_points])
+# Convert the bounding box to a point cloud
+point_cloud = bounding_box_to_point_cloud(bbox, num_points=1000)
 
-# Print hole indices
-print("Hole indices:", holes)
+# Visualize the point cloud
+o3d.visualization.draw_geometries([point_cloud])
