@@ -38,7 +38,11 @@ The communication interface and data flow is shown as below:
 
 
 ### Algorithm
-Refer to our ... to find out more
+The following diagram describes the steps of retrieving obstacles (bumps) in front of the car. The algorithm is implemented in [bump_detection.py](bump_detection.py).
+
+<div style="text-align: center; background: white; padding-top: 10px">
+    <img src="img/diagrams/data_analysis_diagram.png" style="color: white" alt="foxglove_window" height="400">
+</div>
 
 
 ## Result
@@ -51,19 +55,19 @@ Refer to our ... to find out more
 #### ground points segmentation
 
 <div style="align-content: center">
-    <img src="img/1st_ground.png" alt="foxglove_window">
+    <img src="img/1st_ground.png" alt="1st_ground">
 </div>
 
 #### point cloud clustering
 
 <div style="align-content: center">
-    <img src="img/1st_res.png" alt="foxglove_window">
+    <img src="img/1st_res.png" alt="1st_res">
 </div>
 
 #### bump detection
 
 <div style="align-content: center">
-    <img src="img/1st_bump.png" alt="foxglove_window">
+    <img src="img/1st_bump.png" alt="1st_bump">
 </div>
 
 

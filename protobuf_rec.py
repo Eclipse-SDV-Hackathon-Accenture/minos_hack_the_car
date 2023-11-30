@@ -18,7 +18,7 @@ import datatypes.ros.sensor_msgs.CompressedImage_pb2 as img_pb
 import datatypes.ros.sensor_msgs.NavSatFix_pb2 as gnss_pub
 
 from coordinate import calc_dir, WGS84_a, WGS84_e2
-from bump_detaction import find_obstacles
+from bump_detection import find_obstacles
 
 
 class ProtoMsg:
