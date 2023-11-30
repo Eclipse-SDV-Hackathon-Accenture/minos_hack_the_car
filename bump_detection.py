@@ -8,6 +8,14 @@ import matplotlib.pyplot as plt
 
 
 def get_distance_from_point_to_line(pnt, line_point1, line_point2):
+    """
+    This function retrieves the distance from a point to a line
+    :param pnt: point
+    :param line_point1: first point of the line
+    :param line_point2: second point of the line
+    :return: distance
+    """
+
     # same points, return distance between points
     if line_point1 == line_point2:
         point_array = np.array(pnt)
@@ -22,6 +30,12 @@ def get_distance_from_point_to_line(pnt, line_point1, line_point2):
 
 
 def min_dis_to_boundary(boundary, pnt):
+    """
+        This function retrieves the minimum distance to outer boundary
+        :param boundary: outer boundary
+        :param pnt: point
+        :return: minimum distance
+        """
     min_dis = 1000
     N = len(boundary)
     for ii in range(N):
@@ -32,6 +46,12 @@ def min_dis_to_boundary(boundary, pnt):
 
 # check if two line intersect
 def is_intersect(l1, l2):
+    """
+    This function checks if two lines intersect
+    :param l1: first line
+    :param l2: second line
+    :return: None
+    """
     #   l1 [xa, ya, xb, yb]   l2 [xa, ya, xb, yb]
     v1 = (l1[0] - l2[0], l1[1] - l2[1])
     v2 = (l1[0] - l2[2], l1[1] - l2[3])
@@ -56,6 +76,9 @@ def is_intersect(l1, l2):
 
 # check if the point is inside a polygon
 def inside_boundary(boundary, pnt):
+    """
+    This function checks if a point is in the boundary
+    """
     cnt = 0
     N = len(boundary)
     cnt += is_intersect([boundary[0][0], boundary[0][1], boundary[N - 1][0], boundary[N - 1][1]],
@@ -71,6 +94,9 @@ def inside_boundary(boundary, pnt):
 
 # ground points segmentation
 def pcd_ground_seg_open3d(scan):
+    """
+    This function executes the ground-point-segmentation-algorithm
+    """
     pcd = copy.deepcopy(scan)
     # ground model consists of 4 numbers, a, b, c, d
     ground_model, ground_indexes = scan.segment_plane(distance_threshold=0.08,
@@ -83,6 +109,9 @@ def pcd_ground_seg_open3d(scan):
 
 
 def distance_plane_to_point(x1, y1, z1, a: float, b: float, c: float, d: float) -> float:
+    """
+    This function calculates the distance from a plane to a point
+    """
     d = abs((a * x1 + b * y1 + c * z1 + d))
     e = (math.sqrt(a * a + b * b + c * c))
     try:
@@ -92,6 +121,9 @@ def distance_plane_to_point(x1, y1, z1, a: float, b: float, c: float, d: float) 
 
 
 def get_cluster_height(cluster):
+    """
+    This function retrieves the height of a cluster
+    """
     points = np.array(cluster.points)
     l_z, h_z = 0, 0
 
@@ -104,6 +136,9 @@ def get_cluster_height(cluster):
 
 
 def get_cluster_width(cluster):
+    """
+    This function retrieves the width of a cluster
+    """
     obb = cluster.get_oriented_bounding_box()
     points = np.array(obb.get_box_points())
     width = 0
@@ -121,6 +156,9 @@ def get_cluster_width(cluster):
 
 
 def cluster_highest_lowest_point(cluster):
+    """
+    This function retrieves the highest and lowest point of a custer
+    """
     points = np.array(cluster.points)
     l_z, h_z = 0, 0
 
@@ -133,6 +171,9 @@ def cluster_highest_lowest_point(cluster):
 
 
 def categorize_cluster(cluster):
+    """
+    This function categorizes the type of cluster and returns warnings
+    """
     # slow down = 0; change = 1; stop = 2;
     warnings = ["slow down", "change", "stop"]
 
@@ -166,6 +207,9 @@ def categorize_cluster(cluster):
 
 
 def calculate_distance_to_obstacle(point):
+    """
+    This function calculates the distance of the obstacle to the car
+    """
     x, y, z = -1.2, 0, -0.5
 
     distance = math.sqrt((x - point[0]) ** 2 + (y - point[1]) ** 2 + (z - point[2]) ** 2)
@@ -173,6 +217,9 @@ def calculate_distance_to_obstacle(point):
 
 
 def find_obstacles(pcd, flag=0):
+    """
+    This function uses many different algorithms line point-cloud-segmentation, clustering, filtering to retrieve obstacles in front of the car in the cloud-points.
+    """
 
     # set three axis for visualization
     mesh = o3d.geometry.TriangleMesh.create_coordinate_frame()
@@ -306,12 +353,6 @@ def find_obstacles(pcd, flag=0):
         if c == -1:
             continue
         cluster_idx[c].append(i)
-
-    # TODO: detection of height, distance and smoothness of the object
-    # TODO: categorize how severe the situation is
-    # TODO: slow down, change, stop
-    # TODO: check the intensity of a measured cloud point
-    # TODO: Implement function to change the different frames
 
     # mathematical plane
     a, b, c, d = grd_model
