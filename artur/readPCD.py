@@ -6,9 +6,6 @@ import numpy as np
 import copy
 import matplotlib.pyplot as plt
 
-from threading import Thread, Event
-import time
-
 
 def get_distance_from_point_to_line(pnt, line_point1, line_point2):
     # same points, return distance between points
@@ -33,6 +30,7 @@ def min_dis_to_boundary(boundary, pnt):
     return min_dis
 
 
+# check if two line intersect
 def is_intersect(l1, l2):
     #   l1 [xa, ya, xb, yb]   l2 [xa, ya, xb, yb]
     v1 = (l1[0] - l2[0], l1[1] - l2[1])
@@ -56,6 +54,7 @@ def is_intersect(l1, l2):
         return 0
 
 
+# check if the point is inside a polygon
 def inside_boundary(boundary, pnt):
     cnt = 0
     N = len(boundary)
@@ -70,18 +69,16 @@ def inside_boundary(boundary, pnt):
         return False
 
 
+# ground points segmentation
 def pcd_ground_seg_open3d(scan):
-    """ Open3D also supports segmententation of geometric primitives from point clouds using RANSAC.
-    """
     pcd = copy.deepcopy(scan)
+    # ground model consists of 4 numbers, a, b, c, d
     ground_model, ground_indexes = scan.segment_plane(distance_threshold=0.08,
                                                       ransac_n=5,
                                                       num_iterations=1000)
     ground_indexes = np.array(ground_indexes)
     ground = pcd.select_by_index(ground_indexes)
     rest = pcd.select_by_index(ground_indexes, invert=True)
-    # ground.paint_uniform_color(config['ground_color'])
-    # rest.paint_uniform_color(config['rest_color'])
     return ground, rest
 
 
@@ -103,16 +100,13 @@ def get_cluster_height(cluster):
             l_z = i
         if points[i][2] > points[h_z][2]:
             h_z = i
-
     return abs(points[h_z][2] - points[l_z][2])
 
 
 def get_cluster_width(cluster):
     obb = cluster.get_oriented_bounding_box()
     points = np.array(obb.get_box_points())
-
     width = 0
-
     length = points.shape[0]
 
     for i in range(0, length - 1):
@@ -123,7 +117,6 @@ def get_cluster_width(cluster):
             dis = math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
             if dis > width:
                 width = dis
-
     return width
 
 
@@ -136,7 +129,6 @@ def cluster_highest_lowest_point(cluster):
             l_z = i
         if points[i][2] > points[h_z][2]:
             h_z = i
-
     return points[h_z], points[l_z]
 
 
@@ -170,6 +162,7 @@ def categorize_cluster(cluster):
         h_opt = 2
 
     print(warnings[categories[h_opt][w_opt]])
+    return warnings[categories[h_opt][w_opt]], categories[h_opt][w_opt]
 
 
 def calculate_distance_to_obstacle(point):
@@ -179,16 +172,13 @@ def calculate_distance_to_obstacle(point):
     return distance
 
 
-def find_obstacles(pcd_path):
-    print("hello")
-    # for i in range(20):
-    #     point = o3d.io.read_point_cloud("test" + str(i*10) + ".pcd")
-    #     o3d.visualization.draw_geometries([point])
+def find_obstacles(pcd, flag=0):
 
-    pcd = o3d.io.read_point_cloud(pcd_path)
     # set three axis for visualization
     mesh = o3d.geometry.TriangleMesh.create_coordinate_frame()
     mesh.scale(5, center=mesh.get_center())
+    if flag:
+        o3d.visualization.draw_geometries([mesh, pcd], width=800, height=600)
 
     # segment the point cloud using a bbox
     filtered_points = [[], []]
@@ -205,7 +195,8 @@ def find_obstacles(pcd_path):
             # filtered_points[1].append(all_colors[i])
     filtered_model = o3d.geometry.PointCloud()
     filtered_model.points = o3d.utility.Vector3dVector(np.array(filtered_points[0]))
-    # o3d.visualization.draw_geometries([filtered_model], width=800, height=600)
+    if flag:
+        o3d.visualization.draw_geometries([mesh, filtered_model], width=800, height=600)
 
     # first round of ground segmentation, with more points
     ground, rest = pcd_ground_seg_open3d(filtered_model)
@@ -218,7 +209,6 @@ def find_obstacles(pcd_path):
     # remove hidden points, keep the front points only
     diameter = np.linalg.norm(
         np.asarray(filtered_model.get_max_bound()) - np.asarray(filtered_model.get_min_bound()))
-    print("Define parameters used for hidden_point_removal")
     camera = [0, 0, diameter]
     radius = diameter * 70
     _, pt_map = filtered_model.hidden_point_removal(camera, radius)
@@ -236,8 +226,6 @@ def find_obstacles(pcd_path):
     num_points = 10
     radius = 0.5
     ground_ror, ind = ground.remove_radius_outlier(num_points, radius)
-    # obb = ground_ror.get_oriented_bounding_box()
-    # obb.color = (0, 1, 0)  # 绿色
     o3d.visualization.draw_geometries([mesh, ground_ror], width=800, height=600)
 
     # define the 2D shape of the ground point cloud
@@ -265,13 +253,19 @@ def find_obstacles(pcd_path):
     # down sample the points
     boundary_pc = o3d.geometry.PointCloud()
     boundary_pc.points = o3d.utility.Vector3dVector(np.array(boundary_point))
-    voxel_size = 2
-    boundary_pc_dsp = boundary_pc.voxel_down_sample(voxel_size)
-    o3d.visualization.draw_geometries([mesh, boundary_pc_dsp], width=800, height=600)
-
-    # mesh_tx = copy.deepcopy(mesh).translate((1.3, 0, 0))
-    # mesh_ty = copy.deepcopy(mesh).translate((0, 1.3, 0))
-    # print(f'Center of mesh: {mesh.get_center()}')
+    # voxel_size = 2
+    # boundary_pc_dsp = boundary_pc.voxel_down_sample(voxel_size)
+    # o3d.visualization.draw_geometries([mesh, boundary_pc_dsp], width=800, height=600)
+    boundary_pc.paint_uniform_color([0, 0.3, 0])  # 点云颜色
+    lines = []
+    for jj in range(len(boundary_pc.points)):
+        lines.append([jj, jj+1])
+    lines[-1][1] = 0
+    color = [[0, 1, 0] for i in range(len(lines))]
+    lines_pcd = o3d.geometry.LineSet()
+    lines_pcd.lines = o3d.utility.Vector2iVector(lines)
+    lines_pcd.colors = o3d.utility.Vector3dVector(color)  # 线条颜色
+    lines_pcd.points = o3d.utility.Vector3dVector(boundary_pc.points)
 
     # define a smaller region of interest and find bumps inside
     roi_points = [[], []]
@@ -279,9 +273,9 @@ def find_obstacles(pcd_path):
     all_colors = np.asarray(ror_pcd.colors)
 
     # Filter the points
-    forward_thresh = 10
-    backward_thresh = 0
-    length = 4
+    forward_thresh = 15
+    backward_thresh = 2
+    length = 3
     for i in range(0, len(all_points)):
         point = all_points[i]
         if -forward_thresh <= point[0] <= backward_thresh and -length <= point[1] <= length and point[2] <= -0.5:
@@ -302,7 +296,6 @@ def find_obstacles(pcd_path):
     colors[labels < 0] = 0
     roi_pc.colors = o3d.utility.Vector3dVector(colors[:, :3])
 
-    # cluster_color = roi_pc.colors
     # get each sub-point clouds of the clustering result
     cluster_idx = []
     for i in range(max_label + 1):
@@ -324,43 +317,58 @@ def find_obstacles(pcd_path):
 
     # detect if the cluster is a bump
     bump_bbox = []
+    warning_str = []
+    category_idx = []
 
     for idx in cluster_idx:
-        if len(idx) > 100:
-            continue
+        # if len(idx) > 250:
+        #     continue
         cluster = roi_pc.select_by_index(idx)
         center = cluster.get_center()
 
         # distance to boundary
-        dis_to_bdy = min_dis_to_boundary(boundary_pc_dsp.points, center)
-        print(dis_to_bdy)
+        dis_to_bdy = min_dis_to_boundary(boundary_pc.points, center)
 
         # get cluster lowest and highest point
         highest, lowest = cluster_highest_lowest_point(cluster)
 
         # distance to plane
-        dis_to_plane = distance_plane_to_point(lowest[0], lowest[1], lowest[2], a, b, c, d)
+        dis_to_plane = distance_plane_to_point(center[0], center[1], center[2], a, b, c, d)
+        height = distance_plane_to_point(highest[0], highest[1], highest[2], a, b, c, d)
 
         # get cluster height
         cluster_height = get_cluster_height(cluster)
 
-        if inside_boundary(boundary_pc_dsp.points, center) and -0.05 <= dis_to_plane <= 0.5 and highest[
-            2] <= 1.3 and dis_to_bdy > 1 and 0.15 < cluster_height:
-
-            categorize_cluster(cluster)
+        # if inside_boundary(boundary_pc.points, center) and -0.05 <= dis_to_plane <= 0.5 and
+        # highest[2] <= 1.3 and dis_to_bdy > 1 and 0.15 < cluster_height:
+        if inside_boundary(boundary_pc.points, center) and (abs(dis_to_plane) >= 0.1 or abs(height) > 0.2) and \
+                dis_to_bdy > 0.8:
+            warn, cat = categorize_cluster(cluster)
+            warning_str.append(warn)
+            category_idx.append(cat)
 
             distance_obstacle = calculate_distance_to_obstacle(center)
-            print("Distance: ", distance_obstacle)
+            # print("Distance: ", distance_obstacle)
 
             obb = cluster.get_oriented_bounding_box()
-            obb.color = (0, 1, 0)  # 绿色
+            obb.color = (0, 1, 0)  # green
             bump_bbox.append(obb)
-    o3d.visualization.draw_geometries([roi_pc, boundary_pc_dsp] + bump_bbox, width=800, height=600)
+    if flag:
+        o3d.visualization.draw_geometries([mesh, roi_pc, lines_pcd] + bump_bbox, width=800, height=600)
+
+    return roi_pc, warning_str, category_idx
 
 
+"""
+# main function for testing
 def main():
-    find_obstacles("../data/car/test.pcd")
+    pcd_path = "../1701274679.755217000.pcd"
+    pcd_path = "../1701274688.155573000.pcd"
+    pcd_path = "../1701274707.255352000.pcd"
+    pcd = o3d.io.read_point_cloud(pcd_path)
+    find_obstacles(pcd, 0)
 
 
 if __name__ == "__main__":
     main()
+"""
