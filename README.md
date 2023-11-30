@@ -40,7 +40,7 @@ The communication interface and data flow is shown as below:
 ### Algorithm
 The following diagram describes the steps of retrieving obstacles (bumps) in front of the car. The algorithm is implemented in [bump_detection.py](bump_detection.py).
 
-<div style="text-align: center; background: white; padding-top: 10px">
+<div align="center">
     <img src="img/diagrams/data_analysis_diagram.png" style="color: white" alt="foxglove_window" height="400">
 </div>
 
