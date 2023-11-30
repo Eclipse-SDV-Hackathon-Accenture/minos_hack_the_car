@@ -1,13 +1,13 @@
-
 # Hackathon
 This is a repo for the Hackathon Hack-the-car challenge. This project focuses on retrieving a 3d point cloud from the LiDAR sensor in order to predict bumps in front of the car.
 
-## Author
-* Artur
-* Yang
-* Ishan
-* Ayush
-* Matteo
+## Team MINOS
+Members: Artur, Yang, Ishan, Ayush, Matteo
+
+## Table of Contents
+1. [Setup](#setup)
+2. [Structure](#structure)
+3. [Result](#result)
 
 ## Setup
 ### Needed python libraries:
@@ -17,7 +17,7 @@ This is a repo for the Hackathon Hack-the-car challenge. This project focuses on
 * numpy
 * ecal
 
-### Software & interface
+### Software & Interface
 * eCAL
 * Foxglove
 * ecal-foxglove-bridge
@@ -42,25 +42,25 @@ Refer to our ... to find out more
 
 
 ## Result
-* Foxglove visualization
+#### Foxglove visualization
 
 <div style="align-content: center">
     <img src="img/foxglove_window.png" alt="foxglove_window">
 </div>
 
-* ground points segmentation
+#### ground points segmentation
 
 <div style="align-content: center">
     <img src="img/1st_ground.png" alt="foxglove_window">
 </div>
 
-* point cloud clustering
+#### point cloud clustering
 
 <div style="align-content: center">
     <img src="img/1st_res.png" alt="foxglove_window">
 </div>
 
-* bump detection
+#### bump detection
 
 <div style="align-content: center">
     <img src="img/1st_bump.png" alt="foxglove_window">
