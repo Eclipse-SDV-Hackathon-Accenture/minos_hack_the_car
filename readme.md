@@ -1,6 +1,6 @@
 
 # Hackathon
-Thi is a repo for Hackathon Hack the car challenge. This project focuses on retrieving a 3d point cloud from the LiDAR sensor in order to predict bumps in front of the car.
+This is a repo for the Hackathon Hack-the-car challenge. This project focuses on retrieving a 3d point cloud from the LiDAR sensor in order to predict bumps in front of the car.
 
 ## Author
 * Artur
@@ -16,7 +16,6 @@ Thi is a repo for Hackathon Hack the car challenge. This project focuses on retr
 * PIL
 * numpy
 * ecal
-* 
 
 ### Software & interface
 * eCAL
@@ -25,8 +24,8 @@ Thi is a repo for Hackathon Hack the car challenge. This project focuses on retr
 
 ### How to run
 * for offline mode, you need to prepare recorded data file, start eCAL player and play the data
-* for on line mode, connect your PC to device to get real time data
-* start eCAL mornitor, topic names and message types are presented
+* for online mode, connect your PC to device to get real time data
+* start eCAL monitor, topic names and message types are presented
 * start Foxglove and ecal-foxglove-bridge
 ```shell
 python ecal_foxglove_bridge
@@ -44,15 +43,28 @@ Refer to our ... to find out more
 
 ## Result
 * Foxglove visualization
-![image](https://github.com/Eclipse-SDV-Hackathon-Accenture/minos_hack_the_car/tree/main/img/foxglove_window.png)
+
+<div style="align-content: center">
+    <img src="img/foxglove_window.png" alt="foxglove_window">
+</div>
 
 * ground points segmentation
-![image](https://github.com/Eclipse-SDV-Hackathon-Accenture/minos_hack_the_car/img/tree/main/1st_ground.png)
+
+<div style="align-content: center">
+    <img src="img/1st_ground.png" alt="foxglove_window">
+</div>
 
 * point cloud clustering
-![image](https://github.com/Eclipse-SDV-Hackathon-Accenture/minos_hack_the_car/img/tree/main/1st_res.png)
+
+<div style="align-content: center">
+    <img src="img/1st_res.png" alt="foxglove_window">
+</div>
 
 * bump detection
-![image](https://github.com/Eclipse-SDV-Hackathon-Accenture/minos_hack_the_car/img/tree/main/1st_bump.png)
+
+<div style="align-content: center">
+    <img src="img/1st_bump.png" alt="foxglove_window">
+</div>
+
 
 
