@@ -44,15 +44,15 @@ Refer to our ... to find out more
 
 ## Result
 * Foxglove visualization
-![image](https://github.com/Eclipse-SDV-Hackathon-Accenture/minos_hack_the_car/img/foxglove_window.png)
+![image](https://github.com/Eclipse-SDV-Hackathon-Accenture/minos_hack_the_car/tree/main/img/foxglove_window.png)
 
 * ground points segmentation
-![image](https://github.com/Eclipse-SDV-Hackathon-Accenture/minos_hack_the_car/img/1st_ground.png)
+![image](https://github.com/Eclipse-SDV-Hackathon-Accenture/minos_hack_the_car/img/tree/main/1st_ground.png)
 
 * point cloud clustering
-![image](https://github.com/Eclipse-SDV-Hackathon-Accenture/minos_hack_the_car/img/1st_res.png)
+![image](https://github.com/Eclipse-SDV-Hackathon-Accenture/minos_hack_the_car/img/tree/main/1st_res.png)
 
 * bump detection
-![image](https://github.com/Eclipse-SDV-Hackathon-Accenture/minos_hack_the_car/img/1st_bump.png)
+![image](https://github.com/Eclipse-SDV-Hackathon-Accenture/minos_hack_the_car/img/tree/main/1st_bump.png)
 
 
