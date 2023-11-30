@@ -1,0 +1,15 @@
+
+syntax = "proto3";
+import "datatypes/ros/std_msgs/Header.proto";
+import "datatypes/ros/sensor_msgs/CompressedImage.proto";
+
+package ros.sensor_msgs;
+
+message Bump {
+  ros.std_msgs.Header header = 1;
+  double latitude = 2;
+  double longitude = 3;
+  double altitude = 4;
+  int32 level = 5;
+  ros.sensor_msgs.CompressedImage img = 6;
+}
